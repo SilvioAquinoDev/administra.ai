@@ -1,7 +1,9 @@
-// src/app/(dashboard)/layout.tsx - Layout atualizado
+// src/app/(dashboard)/layout.tsx (atualizado com autenticação)
 "use client"
 
 import { useState, useEffect } from "react"
+import { useSession, signOut } from "next-auth/react"
+import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { 
   Menu, 
@@ -10,19 +12,15 @@ import {
   ShoppingBag, 
   Package, 
   Users, 
-  BarChart3, 
   Store, 
-  Settings,
-  Wallet,
-  CreditCard,
   Clock,
+  CreditCard,
   Truck,
   Ticket,
   QrCode,
   Plug,
   HelpCircle,
-  MessageCircle,
-  Star
+  LogOut
 } from "lucide-react"
 
 export default function DashboardLayout({
@@ -30,51 +28,60 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode
 }) {
+  const { data: session, status } = useSession()
+  const router = useRouter()
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [isMobile, setIsMobile] = useState(false)
 
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 1024)
-    checkMobile()
-    window.addEventListener('resize', checkMobile)
-    return () => window.removeEventListener('resize', checkMobile)
-  }, [])
+    if (status === "unauthenticated") {
+      router.push("/login")
+    }
+  }, [status, router])
 
   const menuItems = [
     { icon: Home, label: "Dashboard", href: "/" },
-    { icon: ShoppingBag, label: "Registros NFEs", href: "/nfe", badge: "3" },
-    { icon: Package, label: "Fichas Tecnicas", href: "/produtos" },
-    { icon: MessageCircle, label: "Livro Diario", href: "/whatsapp", connected: true },
-    { icon: Users, label: "Clientes", href: "/simples" },
-    /*{ icon: BarChart3, label: "Dashboard", href: "/relatorios" }*/
+    { icon: ShoppingBag, label: "Registros NFEs", href: "/nfe" },
+    { icon: Package, label: "Fichas Tecnicas", href: "/fichas-tecnicas" },
+    { icon: Users, label: "Planejamento", href: "/planejamento" },
     { icon: Store, label: "Minha loja", href: "/config/loja" },
-    { icon: Clock, label: "Planejamentos", href: "/planejamento" },
-    { icon: CreditCard, label: "Fechamento Mensal", href: "/config/pagamento" },
-    { icon: Truck, label: "Contas bancarias", href: "/config/entrega" },
-    { icon: Ticket, label: "Fluxo de Caixa", href: "/config/cupons", badge: "Novo!" },
+    { icon: Clock, label: "Livro Diário", href: "/livro-diario" },
+    { icon: CreditCard, label: "Fechamento Mensal", href: "/fechamento-mensal" },
+    { icon: Truck, label: "Contas bancarias", href: "/contas-bancarias" },
+    { icon: Ticket, label: "Fluxo de Caixa", href: "/fluxo-caixa" },
   ]
 
   const configItems = [
-    
     { icon: QrCode, label: "QR Code", href: "/config/qrcode" },
     { icon: Plug, label: "Integrações", href: "/config/integracoes" },
   ]
+
+  if (status === "loading") {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    )
+  }
+
+  if (!session) {
+    return null
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Sidebar Desktop */}
       <aside className="fixed left-0 top-0 z-40 hidden h-screen w-64 flex-col bg-white shadow-lg lg:flex">
-        {/* Logo / Topbar */}
-        <div className="flex h-16 items-center gap-2 px-4">
+        {/* Logo */}
+        <div className="flex h-16 items-center gap-2 px-4 border-b">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary">
             <Store className="h-4 w-4 text-white" />
           </div>
-          <span className="text-lg font-semibold">Minha Loja</span>
+          <span className="text-lg font-semibold">Emporio do Sabor</span>
         </div>
 
         {/* Menu Principal */}
         <nav className="flex-1 overflow-y-auto px-2 py-4">
-          <p className="mb-2 px-3 text-x font-semibold uppercase text-gray-400">Menu</p>
+          <p className="mb-2 px-3 text-xs font-semibold uppercase text-gray-400">Menu</p>
           {menuItems.map((item, idx) => (
             <a
               key={idx}
@@ -83,20 +90,12 @@ export default function DashboardLayout({
             >
               <div className="flex items-center gap-3">
                 <item.icon className="h-5 w-5" />
-                <span className="text-s">{item.label}</span>
+                <span className="text-sm">{item.label}</span>
               </div>
-              {item.badge && (
-                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">
-                  {item.badge}
-                </span>
-              )}
-              {item.connected && (
-                <span className="text-xs text-green-600">Conectado</span>
-              )}
             </a>
           ))}
 
-          <p className="mb-2 mt-4 px-3 text-x font-semibold uppercase text-gray-400">
+          <p className="mb-2 mt-4 px-3 text-xs font-semibold uppercase text-gray-400">
             Configurações
           </p>
           {configItems.map((item, idx) => (
@@ -107,25 +106,21 @@ export default function DashboardLayout({
             >
               <div className="flex items-center gap-3">
                 <item.icon className="h-5 w-5" />
-                <span className="text-s">{item.label}</span>
+                <span className="text-sm">{item.label}</span>
               </div>
-              {item.badge && (
-                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">
-                  {item.badge}
-                </span>
-              )}
             </a>
           ))}
         </nav>
 
         {/* Footer */}
-        <div className="border-t border-gray-400 p-14">
-          <a href="#" className="mb-2 block text-s text-gray-500 hover:text-primary">
-            Enviar sugestões
-          </a>
-          <a href="#" className="block text-s text-gray-500 hover:text-primary">
+        <div className="border-t p-4">
+          <button
+            onClick={() => signOut({ callbackUrl: "/login" })}
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-700 transition hover:bg-gray-100"
+          >
+            <LogOut className="h-4 w-4" />
             Sair da conta
-          </a>
+          </button>
         </div>
       </aside>
 
@@ -144,31 +139,37 @@ export default function DashboardLayout({
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <div className="flex h-16 items-center justify-between px-4">
+        <div className="flex h-16 items-center justify-between border-b px-4">
           <div className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary">
               <Store className="h-4 w-4 text-white" />
             </div>
-            <span className="font-semibold">Minha Loja</span>
+            <span className="font-semibold">Emporio do Sabor</span>
           </div>
           <button onClick={() => setSidebarOpen(false)}>
             <X className="h-5 w-5" />
           </button>
         </div>
-        {/* Mobile menu items (same as desktop) */}
         <div className="overflow-y-auto p-2">
           {menuItems.map((item, idx) => (
             <a
               key={idx}
               href={item.href}
-              className="flex items-center justify-between rounded-lg px-3 py-2 text-gray-700"
+              className="flex items-center gap-3 rounded-lg px-3 py-2 text-gray-700"
             >
-              <div className="flex items-center gap-3">
-                <item.icon className="h-5 w-5" />
-                <span>{item.label}</span>
-              </div>
+              <item.icon className="h-5 w-5" />
+              <span>{item.label}</span>
             </a>
           ))}
+          <div className="border-t my-2 pt-2">
+            <button
+              onClick={() => signOut({ callbackUrl: "/login" })}
+              className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-700"
+            >
+              <LogOut className="h-4 w-4" />
+              Sair
+            </button>
+          </div>
         </div>
       </div>
 
@@ -186,8 +187,15 @@ export default function DashboardLayout({
             <button className="rounded-full p-2 hover:bg-gray-100">
               <HelpCircle className="h-5 w-5 text-gray-500" />
             </button>
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200">
-              <span className="text-sm font-medium">AD</span>
+            <div className="flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+                <span className="text-sm font-medium text-primary">
+                  {session.user?.name?.charAt(0).toUpperCase() || "U"}
+                </span>
+              </div>
+              <span className="text-sm font-medium hidden sm:block">
+                {session.user?.name || session.user?.email?.split("@")[0]}
+              </span>
             </div>
           </div>
         </header>
