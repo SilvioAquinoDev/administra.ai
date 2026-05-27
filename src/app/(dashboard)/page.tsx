@@ -1,281 +1,188 @@
-// src/app/(dashboard)/page.tsx - Dashboard com visual cardapio.ai
+// src/app/(dashboard)/dashboard/page.tsx
 "use client"
 
+import { useSession } from "next-auth/react"
+import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
-import { Card, CardContent } from "@/components/ui/card"
+import { Store, Users, Package, DollarSign, TrendingUp, AlertCircle } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  DollarSign, 
-  Target,
-  ShoppingBag,
-  Users,
-  Receipt,
-  Eye,
-  EyeOff,
-  ArrowUpRight
-} from "lucide-react"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { formatCurrency } from "@/lib/utils"
 
 export default function DashboardPage() {
+  const { data: session, status } = useSession()
+  const router = useRouter()
+  const [stats, setStats] = useState({
+    totalProdutos: 0,
+    totalFichas: 0,
+    totalReceitas: 0,
+    totalDespesas: 0
+  })
   const [loading, setLoading] = useState(true)
-  const [hideValues, setHideValues] = useState(false)
-  const [dashboardData, setDashboardData] = useState<any>(null)
 
   useEffect(() => {
-    fetchDashboardData()
-  }, [])
+    if (status === "unauthenticated") {
+      router.push("/login")
+    }
+  }, [status, router])
 
-  async function fetchDashboardData() {
+  useEffect(() => {
+    if (session) {
+      carregarStats()
+    }
+  }, [session])
+
+  async function carregarStats() {
     try {
-      const response = await fetch("/api/dashboard")
-      const data = await response.json()
-      if (data.success) setDashboardData(data.data)
+      const [produtosRes, fichasRes, livroRes] = await Promise.all([
+        fetch("/api/produtos?limit=1"),
+        fetch("/api/fichas-tecnicas?limit=1"),
+        fetch("/api/livro-diario/resumo/saldo")
+      ])
+
+      const produtosData = await produtosRes.json()
+      const fichasData = await fichasRes.json()
+      const livroData = await livroRes.json()
+
+      setStats({
+        totalProdutos: produtosData.total || 0,
+        totalFichas: fichasData.total || 0,
+        totalReceitas: livroData.total_entradas || 0,
+        totalDespesas: livroData.total_saidas || 0
+      })
     } catch (error) {
-      console.error("Erro:", error)
+      console.error("Erro ao carregar stats:", error)
     } finally {
       setLoading(false)
     }
   }
 
-  if (loading) {
+  if (status === "loading" || loading) {
     return (
-      <div className="flex h-96 items-center justify-center">
+      <div className="flex h-64 items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
       </div>
     )
   }
 
-  const totalReceitas = dashboardData?.totalReceitas || 0
-  const totalDespesas = dashboardData?.totalDespesas || 0
-  const lucro = totalReceitas - totalDespesas
-  const margem = totalReceitas > 0 ? (lucro / totalReceitas) * 100 : 0
-
-  // Stats cards data
-  const statsCards = [
-    {
-      title: "Faturamento",
-      value: formatCurrency(totalReceitas),
-      icon: TrendingUp,
-      gradient: "from-green-500 to-green-600",
-      change: "+2.5%",
-    },
-    {
-      title: "Despesas",
-      value: formatCurrency(totalDespesas),
-      icon: TrendingDown,
-      gradient: "from-red-500 to-red-600",
-      change: "+1.2%",
-    },
-    {
-      title: "Lucro",
-      value: formatCurrency(lucro),
-      icon: DollarSign,
-      gradient: "from-blue-500 to-blue-600",
-      change: `Margem: ${margem.toFixed(1)}%`,
-    },
-    {
-      title: "Meta do Mês",
-      value: formatCurrency(60000),
-      icon: Target,
-      gradient: "from-orange-500 to-orange-600",
-      change: "Meta de faturamento",
-    },
-  ]
-
-  const infoCards = [
-    { title: "Total de pedidos", value: "0", icon: ShoppingBag, trend: "+12%" },
-    { title: "Clientes totais", value: "0", icon: Users, trend: "+8%" },
-    { title: "Ticket médio", value: "R$ 0,00", icon: Receipt, trend: "+5%" },
-  ]
+  const isInTrial = session?.user?.isInTrial
+  const trialEndsAt = session?.user?.trialEndsAt ? new Date(session.user.trialEndsAt) : null
+  const daysLeft = trialEndsAt ? Math.ceil((trialEndsAt.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : 0
 
   return (
     <div className="space-y-6">
-      {/* Header com botão de ocultar valores */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
+      {/* Header */}
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Bom dia!</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
           <p className="text-sm text-muted-foreground">
-            Acompanhe o desempenho do seu negócio
+            Bem-vindo, {session?.user?.name || "Usuário"}!
           </p>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setHideValues(!hideValues)}
-          className="gap-2"
-        >
-          {hideValues ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-          {hideValues ? "Mostrar valores" : "Ocultar valores"}
-        </Button>
       </div>
 
-      {/* Stats Cards com gradientes modernos */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {statsCards.map((card, idx) => (
-          <Card
-            key={idx}
-            className={`relative overflow-hidden bg-gradient-to-r ${card.gradient} text-white`}
-          >
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-medium opacity-90">{card.title}</p>
-                <card.icon className="h-5 w-5 opacity-80" />
-              </div>
-              <div className="mt-2 text-2xl font-bold">
-                {hideValues ? "••••••" : card.value}
-              </div>
-              <p className="mt-1 text-xs opacity-80">{card.change}</p>
-            </CardContent>
-            {/* Ícone decorativo de fundo */}
-            <div className="absolute -bottom-4 -right-4 opacity-10">
-              <card.icon className="h-20 w-20" />
-            </div>
-          </Card>
-        ))}
-      </div>
-
-      {/* Cards de informações adicionais */}
-      <div className="grid gap-4 sm:grid-cols-3">
-        {infoCards.map((card, idx) => (
-          <Card key={idx} className="relative overflow-hidden">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-muted-foreground">{card.title}</p>
-                <card.icon className="h-5 w-5 text-muted-foreground" />
-              </div>
-              <div className="mt-2 text-2xl font-bold">
-                {card.title === "Ticket médio" && hideValues ? "••••••" : card.value}
-              </div>
-              <div className="mt-1 flex items-center gap-1 text-xs text-green-600">
-                <ArrowUpRight className="h-3 w-3" />
-                <span>{card.trend}</span>
-                <span className="text-muted-foreground">vs mês passado</span>
-              </div>
-            </CardContent>
-            <div className="absolute -bottom-4 -right-4 opacity-5">
-              <card.icon className="h-20 w-20" />
-            </div>
-          </Card>
-        ))}
-      </div>
-
-      {/* Gráfico de faturamento mensal */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="mb-4 flex items-center justify-between">
-            <h3 className="font-semibold">Faturamento mensal</h3>
-            <select className="rounded-lg border px-3 py-1 text-sm">
-              <option>Últimos 30 dias</option>
-              <option>Últimos 90 dias</option>
-              <option>Este ano</option>
-            </select>
-          </div>
-          <div className="h-64 rounded-lg bg-gray-50 p-4">
-            {/* Placeholder do gráfico */}
-            <div className="flex h-full items-end justify-between gap-2">
-              {[65, 45, 78, 52, 90, 71, 83, 55, 68, 42, 75, 60].map((height, i) => (
-                <div key={i} className="flex flex-1 flex-col items-center gap-1">
-                  <div
-                    className="w-full rounded-lg bg-primary/20 transition-all hover:bg-primary/40"
-                    style={{ height: `${height}%` }}
-                  />
-                  <span className="text-xs text-muted-foreground">{i + 1}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Seção de Pedidos em andamento */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="mb-4 flex items-center justify-between">
-            <h3 className="font-semibold">Pedidos em andamento</h3>
-            <Button variant="link" size="sm" className="text-primary">
-              Acessar painel →
-            </Button>
-          </div>
-          <div className="flex items-center justify-between rounded-lg bg-gray-50 p-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-yellow-100">
-                <ShoppingBag className="h-5 w-5 text-yellow-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">0</p>
-                <p className="text-sm text-muted-foreground">pedidos ativos</p>
-              </div>
-            </div>
-            <Button variant="outline" size="sm">
-              Ver todos
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Produtos mais vendidos */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="mb-4 flex items-center justify-between">
-            <h3 className="font-semibold">Produtos mais vendidos</h3>
-            <Button variant="link" size="sm" className="text-primary">
-              Ver relatório completo →
-            </Button>
-          </div>
-          <div className="space-y-3">
-            {[1, 2, 3, 4, 5].map((_, idx) => (
-              <div key={idx} className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-sm font-medium">
-                    {idx + 1}
-                  </div>
-                  <span className="text-sm">Produto exemplo {idx + 1}</span>
-                </div>
-                <div className="flex items-center gap-4">
-                  <span className="text-sm text-muted-foreground">0 vendas</span>
-                  <span className="text-sm font-medium">R$ 0,00</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Alertas */}
-      {lucro < 0 && (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-4">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-red-100">
-              <TrendingDown className="h-4 w-4 text-red-600" />
-            </div>
-            <div>
-              <p className="font-medium text-red-800">Atenção!</p>
-              <p className="text-sm text-red-700">
-                Suas despesas estão superando as receitas. Revise seus custos!
-              </p>
-            </div>
-          </div>
-        </div>
+      {/* Trial Alert */}
+      {isInTrial && (
+        <Alert variant="warning">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Você está no período de teste gratuito. {daysLeft} dias restantes.
+            {daysLeft <= 3 && " Assine um plano para continuar usando o sistema!"}
+          </AlertDescription>
+        </Alert>
       )}
 
-      {margem < 10 && margem > 0 && (
-        <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-yellow-100">
-              <Target className="h-4 w-4 text-yellow-600" />
+      {/* Stats Cards */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card className="bg-gradient-to-r from-primary to-primary/80 text-white">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Total de Produtos</CardTitle>
+            <Package className="h-4 w-4 opacity-80" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.totalProdutos}</div>
+            <p className="text-xs opacity-80">produtos cadastrados</p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-r from-green-600 to-green-500 text-white">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Fichas Técnicas</CardTitle>
+            <Users className="h-4 w-4 opacity-80" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.totalFichas}</div>
+            <p className="text-xs opacity-80">fichas cadastradas</p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-r from-blue-600 to-blue-500 text-white">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Receitas</CardTitle>
+            <TrendingUp className="h-4 w-4 opacity-80" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{formatCurrency(stats.totalReceitas)}</div>
+            <p className="text-xs opacity-80">total em receitas</p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-r from-red-600 to-red-500 text-white">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Despesas</CardTitle>
+            <DollarSign className="h-4 w-4 opacity-80" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{formatCurrency(stats.totalDespesas)}</div>
+            <p className="text-xs opacity-80">total em despesas</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Ações Rápidas */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Ações Rápidas</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <Button className="w-full" onClick={() => router.push("/nfe")}>
+              Lançar Nova Venda
+            </Button>
+            <Button variant="outline" className="w-full" onClick={() => router.push("/fichas-tecnicas/nova")}>
+              Criar Ficha Técnica
+            </Button>
+            <Button variant="outline" className="w-full" onClick={() => router.push("/nfe/produtos/novo")}>
+              Adicionar Produto
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Informações do Sistema</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Status da assinatura:</span>
+              <span className="font-medium">
+                {isInTrial ? "Período de teste" : session?.user?.subscriptionStatus === "active" ? "Ativa" : "Expirada"}
+              </span>
             </div>
-            <div>
-              <p className="font-medium text-yellow-800">Margem Baixa</p>
-              <p className="text-sm text-yellow-700">
-                Sua margem de lucro está em {margem.toFixed(1)}%. Considere rever seus preços.
-              </p>
+            {isInTrial && (
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Fim do teste:</span>
+                <span className="font-medium">{trialEndsAt?.toLocaleDateString("pt-BR")}</span>
+              </div>
+            )}
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Versão do sistema:</span>
+              <span className="font-medium">2.0.0</span>
             </div>
-          </div>
-        </div>
-      )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }
