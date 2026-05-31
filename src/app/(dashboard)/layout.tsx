@@ -4,7 +4,7 @@
 import { useState, useEffect } from "react"
 import { useSession, signOut } from "next-auth/react"
 import { useRouter, usePathname } from "next/navigation"
-import Link from "next/link"  // ✅ IMPORTANTE: Importar o Link
+import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { 
   Menu, 
@@ -108,6 +108,12 @@ export default function DashboardLayout({
   const isActive = (href: string) => {
     if (href === "/") return pathname === "/"
     return pathname?.startsWith(href)
+  }
+
+  // Função para reabrir o guia de onboarding
+  const reopenOnboarding = () => {
+    localStorage.removeItem("onboarding_completed")
+    window.location.reload()
   }
 
   return (
@@ -286,7 +292,11 @@ export default function DashboardLayout({
           </div>
           
           <div className="flex items-center gap-2">
-            <button className="rounded-full p-1 hover:bg-gray-100 transition-colors">
+            <button 
+              onClick={reopenOnboarding}
+              className="rounded-full p-1 hover:bg-gray-100 transition-colors"
+              title="Abrir guia de configuração"
+            >
               <HelpCircle className="h-4 w-4 text-gray-400" />
             </button>
             <div className="flex items-center gap-1.5">
