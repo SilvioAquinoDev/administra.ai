@@ -38,3 +38,60 @@ export function normalizeString(str: string): string {
 export function generateId(): string {
   return `${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
 }
+
+// ============= FUNÇÕES DO MÓDULO DE CAIXA =============
+
+export function formatarMoeda(valor: number): string {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
+  }).format(valor)
+}
+
+export function formatarData(data: Date | string): string {
+  const d = typeof data === 'string' ? new Date(data) : data
+  return d.toLocaleString('pt-BR')
+}
+
+export function formatarTipoPagamento(tipo: string): string {
+  const tipos: { [key: string]: string } = {
+    'DINHEIRO': 'Dinheiro',
+    'CARTAO_CREDITO': 'Cartão de Crédito',
+    'CARTAO_DEBITO': 'Cartão de Débito',
+    'PIX': 'PIX',
+    'VR': 'Vale Refeição',
+    'OUTRO': 'Outro',
+    'PENDENTE': 'Pendente'
+  }
+  return tipos[tipo] || tipo
+}
+
+export function getBadgeColorTipoPagamento(tipo: string): string {
+  const cores: { [key: string]: string } = {
+    'PENDENTE': 'bg-yellow-100 text-yellow-800',
+    'DINHEIRO': 'bg-green-100 text-green-800',
+    'CARTAO_CREDITO': 'bg-blue-100 text-blue-800',
+    'CARTAO_DEBITO': 'bg-cyan-100 text-cyan-800',
+    'PIX': 'bg-purple-100 text-purple-800',
+    'VR': 'bg-orange-100 text-orange-800',
+    'OUTRO': 'bg-gray-100 text-gray-800'
+  }
+  return cores[tipo] || 'bg-gray-100 text-gray-800'
+}
+
+export function getIconTipoPagamento(tipo: string): string {
+  const icones: { [key: string]: string } = {
+    'PENDENTE': 'bi-clock',
+    'DINHEIRO': 'bi-cash',
+    'CARTAO_CREDITO': 'bi-credit-card',
+    'CARTAO_DEBITO': 'bi-credit-card-2-front',
+    'PIX': 'bi-phone',
+    'VR': 'bi-bag',
+    'OUTRO': 'bi-three-dots'
+  }
+  return icones[tipo] || 'bi-three-dots'
+}
+
+export function formatarDataInput(data: Date): string {
+  return data.toISOString().split('T')[0]
+}

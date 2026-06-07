@@ -80,6 +80,7 @@ export default function DashboardLayout({
     { icon: Ticket, label: "Fluxo de Caixa", href: "/fluxo-caixa", badge: null },
     { icon: Truck, label: "Contas bancárias", href: "/contas-bancarias", badge: null },
     { icon: CreditCard, label: "Fechamento Mensal", href: "/fechamento-mensal", badge: null },
+    { icon: CreditCard, label: "Abrir/Fechar Caixa Diário", href: "/caixa", badge: null },
   ]
 
   const configItems = [
@@ -90,7 +91,7 @@ export default function DashboardLayout({
 
   if (status === "loading") {
     return (
-      <div className="flex h-screen items-center justify-center bg-gray-50">
+      <div className="flex h-screen items-center justify-center bg-gray-900">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#de4838] border-t-transparent" />
       </div>
     )
@@ -117,22 +118,35 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Sidebar Desktop - Largura w-52 (208px) */}
-      <aside className="fixed left-0 top-0 z-40 hidden h-screen w-58 flex-col bg-white shadow-sm lg:flex">
+    <div className="min-h-screen bg-gray-900">
+      {/* Sidebar Desktop - Background Preto */}
+      <aside className="fixed left-0 top-0 z-40 hidden h-screen w-58 flex-col bg-gradient-to-b from-gray-900 to-gray-950 border-r border-gray-800 shadow-xl lg:flex">
         {/* Logo */}
-        <div className="flex h-16 items-center px-3 border-b border-gray-100">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-[#de4838] to-[#de4838]/80 shadow-sm">
+        <div className="flex flex-col items-center justify-center border-b border-gray-800 py-4">
+          <Link href="/" className="flex flex-col items-center gap-1">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-[#de4838] to-[#de4838]/80 shadow-lg">
               <Store className="h-5 w-5 text-white" />
             </div>
-            <span className="text-base font-semibold text-gray-800 truncate max-w-[200px]">{empresaNome}</span>
+            {/* Nome do sistema */}
+            <span className="text-[9px] font-medium text-gray-400 uppercase tracking-wider">
+              KaiUp-Administrator.ai
+            </span>
+            {/* Nome da empresa */}
+            <span className="text-xs font-semibold text-white truncate max-w-[180px] mt-0.5">
+              {empresaNome}
+            </span>
+            {/* Mensagem de Trial abaixo do nome da empresa */}
+            {isInTrial && (
+              <div className="mt-1.5 px-2 py-0.5 rounded-full bg-orange-500/10 border border-orange-500/20">
+                <p className="text-[8px] font-medium text-orange-400">Teste grátis • {daysLeft} dias</p>
+              </div>
+            )}
           </Link>
         </div>
 
-        {/* Menu Principal - USANDO Link DO Next.js */}
-        <nav className="flex-1 overflow-y-auto px-2 py-3">
-          <p className="mb-1.5 px-2 text-[11px] font-semibold uppercase tracking-wider text-gray-400">Menu</p>
+        {/* Menu Principal */}
+        <nav className="flex-1 overflow-y-auto px-2 py-4">
+          <p className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-wider text-gray-500">Menu</p>
           {menuItems.map((item, idx) => {
             const active = isActive(item.href)
             return (
@@ -140,25 +154,25 @@ export default function DashboardLayout({
                 key={idx}
                 href={item.href}
                 className={cn(
-                  "flex items-center justify-between rounded-lg px-2 py-1.5 text-[15px] transition-all mb-0.5",
+                  "flex items-center justify-between rounded-lg px-2 py-1.5 text-[14px] transition-all mb-0.5",
                   active 
-                    ? "bg-[#de4838]/10 text-[#de4838] font-medium" 
-                    : "text-gray-600 hover:bg-gray-100"
+                    ? "bg-[#de4838]/20 text-[#de4838] font-medium" 
+                    : "text-gray-400 hover:text-white hover:bg-gray-800/50"
                 )}
               >
                 <div className="flex items-center gap-2">
-                  <item.icon className={cn("h-3.5 w-3.5", active ? "text-[#de4838]" : "text-gray-400")} />
+                  <item.icon className={cn("h-3.5 w-3.5", active ? "text-[#de4838]" : "text-gray-500")} />
                   <span className="truncate">{item.label}</span>
                 </div>
                 {item.badge && (
-                  <Badge className="bg-amber-100 text-amber-700 text-[9px] px-1">{item.badge}</Badge>
+                  <Badge className="bg-amber-500/20 text-amber-400 text-[9px] px-1 border-amber-500/30">{item.badge}</Badge>
                 )}
                 {active && <ChevronRight className="h-2.5 w-2.5 text-[#de4838]" />}
               </Link>
             )
           })}
 
-          <p className="mb-1.5 mt-4 px-2 text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+          <p className="mb-2 mt-4 px-2 text-[10px] font-semibold uppercase tracking-wider text-gray-500">
             Configurações
           </p>
           {configItems.map((item, idx) => {
@@ -170,12 +184,12 @@ export default function DashboardLayout({
                 className={cn(
                   "flex items-center justify-between rounded-lg px-2 py-1.5 text-[14px] transition-all mb-0.5",
                   active 
-                    ? "bg-[#de4838]/10 text-[#de4838] font-medium" 
-                    : "text-gray-600 hover:bg-gray-100"
+                    ? "bg-[#de4838]/20 text-[#de4838] font-medium" 
+                    : "text-gray-400 hover:text-white hover:bg-gray-800/50"
                 )}
               >
                 <div className="flex items-center gap-2">
-                  <item.icon className={cn("h-3.5 w-3.5", active ? "text-[#de4838]" : "text-gray-400")} />
+                  <item.icon className={cn("h-3.5 w-3.5", active ? "text-[#de4838]" : "text-gray-500")} />
                   <span className="truncate">{item.label}</span>
                 </div>
                 {active && <ChevronRight className="h-2.5 w-2.5 text-[#de4838]" />}
@@ -184,138 +198,153 @@ export default function DashboardLayout({
           })}
         </nav>
 
-        {/* Footer */}
-        <div className="border-t border-gray-200 p-2">
-          {isInTrial && (
-            <div className="mb-2 rounded-lg bg-orange-50 p-1.5 text-center">
-              <p className="text-[12px] font-medium text-orange-700">Teste grátis</p>
-              <p className="text-[10px] text-orange-600">{daysLeft} dias</p>
+        {/* Footer da Sidebar */}
+        <div className="border-t border-gray-800 p-3 space-y-3">
+          {/* Informações do usuário */}
+          <div className="flex items-center gap-2 px-2 py-2 rounded-lg bg-gray-800/50">
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-[#de4838] to-[#de4838]/80 text-white text-[11px] font-medium shadow-lg">
+              {session.user?.name?.charAt(0).toUpperCase() || session.user?.email?.charAt(0).toUpperCase() || "U"}
             </div>
-          )}
-          <button
-            onClick={() => signOut({ callbackUrl: "/login" })}
-            className="flex w-full items-center justify-center gap-1.5 rounded-lg px-2 py-1.5 text-[15px] text-gray-600 transition-all hover:bg-gray-100"
-          >
-            <LogOut className="h-5 w-5 text-gray-400" />
-            Sair
-          </button>
+            <div className="flex-1 min-w-0">
+              <p className="text-[11px] font-medium text-gray-200 truncate">
+                {session.user?.name || session.user?.email?.split("@")[0]}
+              </p>
+            </div>
+          </div>
+
+          {/* Botões de ação */}
+          <div className="flex gap-1.5">
+            <button
+              onClick={reopenOnboarding}
+              className="flex flex-1 items-center justify-center gap-1 rounded-lg px-2 py-1.5 text-[10px] text-gray-400 transition-all hover:text-white hover:bg-gray-800/50"
+            >
+              <HelpCircle className="h-3 w-3" />
+              <span>Ajuda</span>
+            </button>
+            
+            <button
+              onClick={() => signOut({ callbackUrl: "/login" })}
+              className="flex flex-1 items-center justify-center gap-1 rounded-lg px-2 py-1.5 text-[10px] text-gray-400 transition-all hover:text-white hover:bg-gray-800/50"
+            >
+              <LogOut className="h-3 w-3" />
+              <span>Sair</span>
+            </button>
+          </div>
         </div>
       </aside>
 
       {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
-      {/* Mobile Sidebar - USANDO Link DO Next.js */}
+      {/* Mobile Sidebar - Background Preto */}
       <div
         className={cn(
-          "fixed left-0 top-0 z-50 h-full w-64 transform bg-white shadow-xl transition-transform duration-300 lg:hidden",
+          "fixed left-0 top-0 z-50 h-full w-64 transform bg-gradient-to-b from-gray-900 to-gray-950 shadow-xl transition-transform duration-300 lg:hidden",
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <div className="flex h-14 items-center justify-between border-b border-gray-100 px-3">
-          <Link href="/" onClick={() => setSidebarOpen(false)} className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-gradient-to-br from-[#de4838] to-[#de4838]/80 shadow-md">
-              <Store className="h-3.5 w-3.5 text-white" />
+        <div className="flex flex-col items-center border-b border-gray-800 py-4 px-3">
+          <Link href="/" onClick={() => setSidebarOpen(false)} className="flex flex-col items-center gap-1">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#de4838] to-[#de4838]/80 shadow-lg">
+              <Store className="h-4 w-4 text-white" />
             </div>
-            <span className="font-semibold text-gray-800 text-sm truncate max-w-[180px]">{empresaNome}</span>
+            <span className="text-[8px] font-medium text-gray-400 uppercase tracking-wider">
+              KaiUp-Administrator.ai
+            </span>
+            <span className="text-[11px] font-semibold text-white truncate max-w-[180px]">
+              {empresaNome}
+            </span>
+            {isInTrial && (
+              <div className="mt-1.5 px-2 py-0.5 rounded-full bg-orange-500/10 border border-orange-500/20">
+                <p className="text-[7px] font-medium text-orange-400">Teste grátis • {daysLeft} dias</p>
+              </div>
+            )}
           </Link>
           <button 
             onClick={() => setSidebarOpen(false)}
-            className="rounded-lg p-1 hover:bg-gray-100"
+            className="absolute right-3 top-3 rounded-lg p-1 hover:bg-gray-800"
           >
-            <X className="h-4 w-4 text-gray-500" />
+            <X className="h-4 w-4 text-gray-400" />
           </button>
         </div>
-        <div className="overflow-y-auto p-2">
-          {menuItems.map((item, idx) => (
-            <Link
-              key={idx}
-              href={item.href}
-              className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs text-gray-700 hover:bg-gray-100"
-              onClick={() => setSidebarOpen(false)}
-            >
-              <item.icon className="h-3.5 w-3.5 text-gray-400" />
-              <span>{item.label}</span>
-            </Link>
-          ))}
-          <div className="my-2 border-t border-gray-100 pt-2">
-            {configItems.map((item, idx) => (
+        
+        <div className="flex h-[calc(100%-140px)] flex-col overflow-y-auto">
+          <div className="flex-1 p-2">
+            {menuItems.map((item, idx) => (
               <Link
                 key={idx}
                 href={item.href}
-                className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs text-gray-700 hover:bg-gray-100"
+                className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-[11px] text-gray-400 hover:text-white hover:bg-gray-800/50"
                 onClick={() => setSidebarOpen(false)}
               >
-                <item.icon className="h-3.5 w-3.5 text-gray-400" />
+                <item.icon className="h-3.5 w-3.5 text-gray-500" />
                 <span>{item.label}</span>
               </Link>
             ))}
+            <div className="my-2 border-t border-gray-800 pt-2">
+              {configItems.map((item, idx) => (
+                <Link
+                  key={idx}
+                  href={item.href}
+                  className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-[11px] text-gray-400 hover:text-white hover:bg-gray-800/50"
+                  onClick={() => setSidebarOpen(false)}
+                >
+                  <item.icon className="h-3.5 w-3.5 text-gray-500" />
+                  <span>{item.label}</span>
+                </Link>
+              ))}
+            </div>
           </div>
-          <div className="border-t border-gray-100 pt-2">
-            <button
-              onClick={() => signOut({ callbackUrl: "/login" })}
-              className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-xs text-gray-700 hover:bg-gray-100"
-            >
-              <LogOut className="h-3.5 w-3.5 text-gray-400" />
-              Sair
-            </button>
+          
+          {/* Footer do Mobile Sidebar */}
+          <div className="border-t border-gray-800 p-3 space-y-2">
+            <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-gray-800/50">
+              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-[#de4838] to-[#de4838]/80 text-white text-[10px] font-medium">
+                {session.user?.name?.charAt(0).toUpperCase() || session.user?.email?.charAt(0).toUpperCase() || "U"}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] font-medium text-gray-200 truncate">
+                  {session.user?.name || session.user?.email?.split("@")[0]}
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex gap-1.5">
+              <button
+                onClick={reopenOnboarding}
+                className="flex flex-1 items-center justify-center gap-1 rounded-lg px-2 py-1 text-[9px] text-gray-400 hover:text-white hover:bg-gray-800/50"
+              >
+                <HelpCircle className="h-2.5 w-2.5" />
+                Ajuda
+              </button>
+              
+              <button
+                onClick={() => signOut({ callbackUrl: "/login" })}
+                className="flex flex-1 items-center justify-center gap-1 rounded-lg px-2 py-1 text-[9px] text-gray-400 hover:text-white hover:bg-gray-800/50"
+              >
+                <LogOut className="h-2.5 w-2.5" />
+                Sair
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
+      {/* Botão flutuante para abrir sidebar no mobile */}
+      <button
+        onClick={() => setSidebarOpen(true)}
+        className="fixed bottom-4 right-4 z-30 rounded-full bg-[#de4838] p-3 shadow-lg hover:bg-[#de4838]/90 transition-all lg:hidden"
+      >
+        <Menu className="h-5 w-5 text-white" />
+      </button>
+
       {/* Main Content */}
       <div className="lg:pl-52">
-        {/* Topbar - Desktop e Mobile */}
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between bg-white px-4 shadow-sm border-b border-gray-100">
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="rounded-lg p-1 hover:bg-gray-100 lg:hidden"
-          >
-            <Menu className="h-4 w-4 text-gray-500" />
-          </button>
-          
-          <div className="hidden lg:block w-10" />
-          
-          {/* Logo centralizado - clicável e volta para dashboard sem refresh */}
-          <div className="flex-1 flex justify-center lg:flex-none lg:absolute lg:left-1/2 lg:transform lg:-translate-x-1/2">
-            <Link href="/" className="flex items-center gap-1.5">
-              <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-gradient-to-br from-[#de4838] to-[#de4838]/80 shadow-sm lg:hidden">
-                <Store className="h-3 w-3 text-white" />
-              </div>
-              <span className="text-base font-semibold text-gray-800">KaiUp-Administrator.ai</span>
-            </Link>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <button 
-              onClick={reopenOnboarding}
-              className="rounded-full p-1 hover:bg-gray-100 transition-colors"
-              title="Abrir guia de configuração"
-            >
-              <HelpCircle className="h-5 w-5 text-gray-400" />
-            </button>
-            <div className="flex items-center gap-1.5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-[#de4838] to-[#de4838]/80 text-white text-[15px] font-medium shadow-sm">
-                {session.user?.name?.charAt(0).toUpperCase() || session.user?.email?.charAt(0).toUpperCase() || "U"}
-              </div>
-              <div className="hidden sm:block">
-                <p className="text-[15px] font-medium text-gray-700">
-                  {session.user?.name || session.user?.email?.split("@")[0]}
-                </p>
-                {isInTrial && (
-                  <p className="text-[11px] text-orange-500">{daysLeft} dias</p>
-                )}
-              </div>
-            </div>
-          </div>
-        </header>
-
-        {/* Page Content */}
         <main className="p-4">{children}</main>
       </div>
     </div>
