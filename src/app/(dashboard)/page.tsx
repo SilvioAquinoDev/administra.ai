@@ -425,7 +425,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Trial Alert */}
+        {/* Trial Alerta */}
         {isInTrial && (
           <Alert className={`mb-6 rounded-xl ${daysLeft <= 3 ? "bg-orange-50 border-orange-200" : "bg-blue-50 border-blue-200"}`}>
             <AlertCircle className={`h-4 w-4 ${daysLeft <= 3 ? "text-orange-600" : "text-blue-600"}`} />
