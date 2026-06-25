@@ -27,6 +27,7 @@ import {
   ResponsiveContainer
 } from "recharts"
 import { IndicadoresCard } from "./components/IndicadoresCard"
+import { ProdutividadeChart } from "@/components/produtividade-chart"
 
 type PeriodoType = "hoje" | "mes" | "ano" | "especifico"
 
@@ -488,7 +489,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Trial Alert */}
+        {/* Trial Alerta */}
         {isInTrial && (
           <Alert className={`mb-6 rounded-xl ${daysLeft <= 3 ? "bg-orange-50 border-orange-200" : "bg-blue-50 border-blue-200"}`}>
             <AlertCircle className={`h-4 w-4 ${daysLeft <= 3 ? "text-orange-600" : "text-blue-600"}`} />
@@ -818,6 +819,19 @@ export default function DashboardPage() {
                 </p>
               </div>
             )}
+          </CardContent>
+        </div>
+
+        {/* Produtividade por funcionário */}
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-6">
+          <div className="bg-gray-50 p-4 border-b border-gray-100">
+            <div className="flex items-center gap-2">
+              <Trophy className="h-5 w-5 text-[#de4838]" />
+              <h3 className="font-semibold text-gray-800">Produtividade</h3>
+            </div>
+          </div>
+          <CardContent className="p-5">
+            <ProdutividadeChart />
           </CardContent>
         </div>
 
