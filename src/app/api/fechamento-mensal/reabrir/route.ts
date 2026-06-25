@@ -10,6 +10,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
+  const empresaId = session.user.empresaId;
+  if (!empresaId) {
+    return NextResponse.json({ error: "Empresa não encontrada" }, { status: 401 });
+  }
+
   try {
     const body = await request.json();
     const { ano, mes } = body;
@@ -24,7 +29,7 @@ export async function POST(request: NextRequest) {
     // Verificar se existe
     const existing = await prisma.fechamentoMensal.findFirst({
       where: {
-        userId: session.user.id,
+        empresaId,
         ano,
         mes,
       },
@@ -40,8 +45,8 @@ export async function POST(request: NextRequest) {
     // Reabrir o mês
     const fechamento = await prisma.fechamentoMensal.update({
       where: {
-        userId_ano_mes: {
-          userId: session.user.id,
+        empresaId_ano_mes: {
+          empresaId,
           ano,
           mes,
         },

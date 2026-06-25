@@ -10,10 +10,15 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
+  const empresaId = session.user.empresaId;
+  if (!empresaId) {
+    return NextResponse.json({ error: "Empresa não encontrada" }, { status: 401 });
+  }
+
   try {
     const despesas = await prisma.despesaFixa.findMany({
       where: {
-        userId: session.user.id,
+        empresaId,
       },
       orderBy: {
         vencimento: "asc",
@@ -47,6 +52,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
+  const empresaId = session.user.empresaId;
+  if (!empresaId) {
+    return NextResponse.json({ error: "Empresa não encontrada" }, { status: 401 });
+  }
+
   try {
     const body = await request.json();
     const { nome, valor, vencimento, contaId, status } = body;
@@ -60,6 +70,7 @@ export async function POST(request: NextRequest) {
 
     const despesa = await prisma.despesaFixa.create({
       data: {
+        empresaId,
         userId: session.user.id,
         nome,
         valor: parseFloat(valor),
